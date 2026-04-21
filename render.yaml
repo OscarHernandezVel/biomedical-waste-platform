@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: biomedical-waste-backend
+    runtime: java
+    plan: free
+    buildCommand: ./gradlew bootJar -x test
+    startCommand: java -jar build/libs/demo-0.0.1-SNAPSHOT.jar
+    healthCheckPath: /api/waste
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_DATASOURCE_URL
+        sync: false          # lo pegas manualmente en el dashboard
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
