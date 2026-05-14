@@ -8,8 +8,11 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -33,6 +36,27 @@ public class RouteController {
     @PostMapping
     public ResponseEntity<Route> createRoute(@RequestBody Route route) {
         return ResponseEntity.ok(routeService.createRoute(route));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Route> getById(@PathVariable String id) {
+        return ResponseEntity.ok(routeService.getById(id));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Route> update(@PathVariable String id, @RequestBody Route payload) {
+        return ResponseEntity.ok(routeService.updateRoute(id, payload));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable String id) {
+        routeService.deleteRoute(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/stops")
+    public ResponseEntity<List<Map<String, Object>>> stops(@PathVariable String id) {
+        return ResponseEntity.ok(routeService.getStops(id));
     }
 
     /** Returns the optimal route between two collection points using Dijkstra. */

@@ -4,10 +4,13 @@ import com.biomedical.waste.demo.models.Route;
 import com.biomedical.waste.demo.repository.RouteRepository;
 import com.biomedical.waste.demo.structures.RouteGraph;
 import jakarta.annotation.PostConstruct;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -58,6 +61,73 @@ public class RouteService {
     public Route createRoute(Route route) {
         if (route == null) throw new IllegalArgumentException("Route cannot be null");
         return routeRepository.save(route);
+    }
+
+    public Route getById(String id) {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("Route id cannot be empty");
+        }
+        return routeRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ruta no encontrada"));
+    }
+
+    public Route updateRoute(String id, Route payload) {
+        Route current = getById(id);
+        if (payload == null) {
+            throw new IllegalArgumentException("Route cannot be null");
+        }
+
+        if (payload.getName() != null) {
+            current.setName(payload.getName());
+        }
+        if (payload.getStatus() != null) {
+            current.setStatus(payload.getStatus());
+        }
+        if (payload.getDate() != null) {
+            current.setDate(payload.getDate());
+        }
+        if (payload.getDistanceKm() != null) {
+            current.setDistanceKm(payload.getDistanceKm());
+        }
+        if (payload.getAssignedDriver() != null) {
+            current.setAssignedDriver(payload.getAssignedDriver());
+        }
+
+        return routeRepository.save(current);
+    }
+
+    public void deleteRoute(String id) {
+        getById(id);
+        routeRepository.deleteById(id);
+    }
+
+    public List<Map<String, Object>> getStops(String id) {
+        Route route = getById(id);
+
+        Map<String, double[]> coords = new LinkedHashMap<>();
+        coords.put("HospitalSanRafael", new double[] { 4.710989, -74.072090 });
+        coords.put("ClinicaSur", new double[] { 4.609710, -74.081750 });
+        coords.put("LaboratorioCentral", new double[] { 4.648283, -74.247894 });
+        coords.put("CentroVeterinario", new double[] { 4.735000, -74.070000 });
+        coords.put("HospitalPediatrico", new double[] { 4.676000, -74.048000 });
+        coords.put("DepositoCentral", new double[] { 4.598100, -74.075800 });
+
+        String start = coords.containsKey(route.getName()) ? route.getName() : "HospitalSanRafael";
+        List<String> path = routeGraph.dijkstra(start, "DepositoCentral").path;
+        if (path == null || path.isEmpty()) {
+            path = List.of(start, "DepositoCentral");
+        }
+
+        return path.stream()
+            .map(name -> {
+                double[] c = coords.getOrDefault(name, new double[] { 0.0, 0.0 });
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("name", name);
+                m.put("lat", c[0]);
+                m.put("lng", c[1]);
+                return m;
+            })
+            .toList();
     }
 }
 

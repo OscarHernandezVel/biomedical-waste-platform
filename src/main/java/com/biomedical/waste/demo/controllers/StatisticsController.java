@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -56,6 +57,28 @@ public class StatisticsController {
     @GetMapping("/most-frequent-type")
     public ResponseEntity<WasteType> getMostFrequentType() {
         return ResponseEntity.ok(statisticsService.getMostFrequentType());
+    }
+
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> summary() {
+        return ResponseEntity.ok(statisticsService.summary());
+    }
+
+    @GetMapping("/trend")
+    public ResponseEntity<List<Map<String, Object>>> trend(@RequestParam(required = false) Integer days) {
+        int d = days == null ? 30 : days;
+        return ResponseEntity.ok(statisticsService.trend(d));
+    }
+
+    @GetMapping("/distribution")
+    public ResponseEntity<Map<String, Long>> distribution() {
+        return ResponseEntity.ok(statisticsService.distribution());
+    }
+
+    @GetMapping("/top-generators")
+    public ResponseEntity<List<Map<String, Object>>> topGenerators(@RequestParam(required = false) Integer limit) {
+        int n = limit == null ? 10 : limit;
+        return ResponseEntity.ok(statisticsService.topGenerators(n));
     }
 }
 

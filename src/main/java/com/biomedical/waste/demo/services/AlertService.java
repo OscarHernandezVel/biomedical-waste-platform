@@ -8,7 +8,9 @@ import com.biomedical.waste.demo.repository.AlertRepository;
 import com.biomedical.waste.demo.structures.AlertStack;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -58,6 +60,26 @@ public class AlertService {
     /** Returns all currently unresolved alerts. */
     public List<Alert> getActive() {
         return alertRepository.findByResolved(false);
+    }
+
+    public Alert markRead(String id) {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("Alert id cannot be empty");
+        }
+        Alert alert = alertRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Alerta no encontrada"));
+        alert.setResolved(true);
+        return alertRepository.save(alert);
+    }
+
+    public void delete(String id) {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("Alert id cannot be empty");
+        }
+        if (!alertRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Alerta no encontrada");
+        }
+        alertRepository.deleteById(id);
     }
 
     /** Returns the full alert history from the stack (most recent first). */
