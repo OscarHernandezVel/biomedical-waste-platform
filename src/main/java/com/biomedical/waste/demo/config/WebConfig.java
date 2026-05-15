@@ -17,7 +17,11 @@ public class WebConfig {
     public WebMvcConfigurer corsConfigurer() {
         String[] origins = Stream.concat(
                 Arrays.stream(corsOrigin.split(",")).map(String::trim).filter(s -> !s.isBlank()),
-                Stream.of("http://localhost:5173", "http://localhost:3000")
+                Stream.of(
+                    "http://localhost:5173",
+                    "http://localhost:3000",
+                    "https://traebiomedical-frontedxit2.vercel.app"
+                )
             )
             .distinct()
             .toArray(String[]::new);
