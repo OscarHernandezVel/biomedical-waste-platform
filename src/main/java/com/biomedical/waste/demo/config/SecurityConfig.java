@@ -20,15 +20,15 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.web.SecurityFilterChain;
+import com.biomedical.waste.demo.security.AdminKeyAuthFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import com.biomedical.waste.demo.security.AdminKeyFilter;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final AdminKeyFilter adminKeyFilter;
+    private final AdminKeyAuthFilter adminKeyAuthFilter;
 
     @Value("${supabase.project.ref:}")
     private String supabaseProjectRef;
@@ -42,15 +42,11 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(Customizer.withDefaults())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .addFilterBefore(adminKeyFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(adminKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/chat/**").permitAll()
-                .requestMatchers("/api/statistics/**").permitAll()
-                .requestMatchers("/api/routes/**").permitAll()
-                .requestMatchers("/api/wastes/**").permitAll()
-                .requestMatchers("/api/alerts/**").permitAll()
                 .requestMatchers("/api/admin/**").authenticated()
+                .requestMatchers("/api/**").permitAll()
                 .anyRequest().permitAll()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
