@@ -39,3 +39,8 @@ out/
 
 biomedical-waste-platform/
 biomedical-waste-platform-2/
+
+# Env files
+.env
+.env.*
+!.env.example

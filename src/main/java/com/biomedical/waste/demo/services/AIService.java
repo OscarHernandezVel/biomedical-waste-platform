@@ -52,17 +52,18 @@ public class AIService {
                 .timestamp(LocalDateTime.now().toString())
                 .build();
         }
-        if (openaiApiKey == null || openaiApiKey.isBlank()) {
-            return ChatResponse.builder()
-                .message("Falta configurar la API key de OpenAI en la variable OPENAI_API_KEY.")
-                .success(false)
-                .timestamp(LocalDateTime.now().toString())
-                .build();
-        }
 
         ChatResponse quick = quickAnswer(request.getMessage());
         if (quick != null) {
             return quick;
+        }
+
+        if (openaiApiKey == null || openaiApiKey.isBlank()) {
+            return ChatResponse.builder()
+                .message(buildOfflineAssistantResponse(request.getMessage()))
+                .success(true)
+                .timestamp(LocalDateTime.now().toString())
+                .build();
         }
 
         try {
@@ -106,12 +107,60 @@ public class AIService {
                 .build();
         } catch (RestClientException e) {
             return ChatResponse.builder()
-                .message("Error al conectar con el asistente de IA.")
-                .success(false)
+                .message(buildOfflineAssistantResponse(request.getMessage()))
+                .success(true)
                 .error(e.getMessage())
                 .timestamp(LocalDateTime.now().toString())
                 .build();
         }
+    }
+
+    private String buildOfflineAssistantResponse(String userMessage) {
+        long totalWastes = wasteRepository.count();
+        long activeAlerts = alertRepository.findByResolved(false).size();
+        long highRiskAlerts = alertRepository.countByLevel(AlertLevel.HIGH);
+
+        String msg = userMessage == null ? "" : userMessage.trim().toLowerCase();
+
+        String base = "Asistente en modo offline (sin conexión a proveedor de IA).\n" +
+            "Datos actuales del sistema:\n" +
+            "- Total de residuos registrados: " + totalWastes + "\n" +
+            "- Alertas activas sin resolver: " + activeAlerts + "\n" +
+            "- Alertas de alto riesgo: " + highRiskAlerts + "\n\n";
+
+        if (msg.contains("residuo") || msg.contains("tipo")) {
+            ChatResponse quick = quickAnswer("tipos");
+            return base + (quick != null ? quick.getMessage() : "Puedo ayudarte con tipos de residuos y su gestión.") + "\n" +
+                "Tip: escribe 'tipos' para ver la lista completa.";
+        }
+
+        if (msg.contains("norma") || msg.contains("decreto") || msg.contains("resolución") || msg.contains("resolucion")) {
+            ChatResponse quick = quickAnswer("normativa");
+            return base + (quick != null ? quick.getMessage() : "Puedo ayudarte con normativa colombiana aplicable.");
+        }
+
+        if (msg.contains("trat") || msg.contains("autoclave") || msg.contains("inciner")) {
+            ChatResponse quick = quickAnswer("tratamientos");
+            return base + (quick != null ? quick.getMessage() : "Puedo ayudarte con tratamientos recomendados según el tipo de residuo.");
+        }
+
+        if (msg.contains("alert")) {
+            return base + "Recomendación de operación:\n" +
+                "- Revisa primero alertas de ALTO riesgo.\n" +
+                "- Valida trazabilidad: generación → recolección → tratamiento → disposición final.\n" +
+                "- Si una alerta está asociada a una ruta/orden, prioriza su ejecución.";
+        }
+
+        if (msg.contains("ruta") || msg.contains("vehiculo") || msg.contains("vehículo") || msg.contains("orden")) {
+            return base + "Flujo recomendado:\n" +
+                "1) Verifica órdenes pendientes.\n" +
+                "2) Asigna ruta y vehículo disponibles.\n" +
+                "3) Ejecuta recolección y genera manifiesto.\n" +
+                "4) Cierra la orden cuando llegue a planta y se registre disposición final.";
+        }
+
+        return base + "Puedo ayudarte con: tipos de residuos, tratamientos, normativa, rutas/órdenes y alertas.\n" +
+            "Para respuestas completas con IA, configura `OPENAI_API_KEY` en Railway/Vercel (backend).";
     }
 
     /** Returns a predefined answer for common topics or null when not applicable. */
