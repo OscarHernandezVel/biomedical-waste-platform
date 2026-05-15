@@ -7,6 +7,7 @@ import com.biomedical.waste.demo.structures.RouteGraph;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -36,7 +37,7 @@ public class RouteController {
     /** Creates and saves a new route record. */
     @PostMapping
     public ResponseEntity<Route> createRoute(@RequestBody Route route) {
-        return ResponseEntity.ok(routeService.createRoute(route));
+        return ResponseEntity.status(HttpStatus.CREATED).body(routeService.createRoute(route));
     }
 
     @GetMapping("/{id}")
@@ -62,7 +63,7 @@ public class RouteController {
 
     @PostMapping("/{id}/stops")
     public ResponseEntity<RouteStop> createStop(@PathVariable String id, @RequestBody RouteStop stop) {
-        return ResponseEntity.ok(routeService.createStop(id, stop));
+        return ResponseEntity.status(HttpStatus.CREATED).body(routeService.createStop(id, stop));
     }
 
     @PutMapping("/{id}/stops/{stopId}")

@@ -5,6 +5,7 @@ import com.biomedical.waste.demo.models.WasteType;
 import com.biomedical.waste.demo.services.WasteService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -39,7 +40,7 @@ public class WasteController {
     /** Creates a new waste record with full validation. */
     @PostMapping
     public ResponseEntity<Waste> create(@RequestBody Waste waste) {
-        return ResponseEntity.ok(wasteService.create(waste));
+        return ResponseEntity.status(HttpStatus.CREATED).body(wasteService.create(waste));
     }
 
     /** Updates an existing waste record. */

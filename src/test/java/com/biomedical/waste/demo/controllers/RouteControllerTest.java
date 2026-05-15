@@ -32,7 +32,7 @@ class RouteControllerTest {
         RouteController controller = new RouteController(routeService);
         when(routeService.createRoute(Mockito.any(Route.class))).thenReturn(sampleRoute("r1"));
         ResponseEntity<Route> response = controller.createRoute(sampleRoute(null));
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
     }
 

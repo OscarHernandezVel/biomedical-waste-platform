@@ -45,7 +45,7 @@ class WasteControllerTest {
         when(wasteService.create(Mockito.any(Waste.class))).thenReturn(sampleWaste("w2"));
         Waste request = sampleWaste(null);
         ResponseEntity<Waste> response = controller.create(request);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
     }
 

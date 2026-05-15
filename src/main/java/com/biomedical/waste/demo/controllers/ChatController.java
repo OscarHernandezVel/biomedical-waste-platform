@@ -33,10 +33,11 @@ public class ChatController {
         }
         ChatResponse response = aiService.chat(request);
         if (!response.isSuccess()) {
-            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
-                "message", response.getMessage(),
-                "error", response.getError()
-            ));
+            String msg = response.getMessage();
+            if (response.getError() != null && !response.getError().isBlank()) {
+                msg = msg + ": " + response.getError();
+            }
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of("message", msg));
         }
         return ResponseEntity.ok(Map.of("reply", response.getMessage()));
     }
