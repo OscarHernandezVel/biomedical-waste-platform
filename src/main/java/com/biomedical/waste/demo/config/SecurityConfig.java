@@ -20,7 +20,10 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.web.SecurityFilterChain;
-import com.biomedical.waste.demo.security.AdminKeyAuthFilter;
+import com.biomedical.waste.demo.security.AdminKeyRequiredFilter;
+import com.biomedical.waste.demo.security.RestAccessDeniedHandler;
+import com.biomedical.waste.demo.security.RestAuthenticationEntryPoint;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
@@ -28,7 +31,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final AdminKeyAuthFilter adminKeyAuthFilter;
+    private final AdminKeyRequiredFilter adminKeyRequiredFilter;
+    private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+    private final RestAccessDeniedHandler restAccessDeniedHandler;
 
     @Value("${supabase.project.ref:}")
     private String supabaseProjectRef;
@@ -42,7 +47,11 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(Customizer.withDefaults())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .addFilterBefore(adminKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint(restAuthenticationEntryPoint)
+                .accessDeniedHandler(restAccessDeniedHandler)
+            )
+            .addFilterAfter(adminKeyRequiredFilter, BearerTokenAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/admin/**").authenticated()
