@@ -2,50 +2,47 @@ package com.biomedical.waste.demo.models;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
-import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
-@Table(name = "routes")
+@Table(name = "route_stops")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Route {
+public class RouteStop {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @Column(name = "route_id", nullable = false)
+    private String routeId;
+
     @Column(nullable = false)
     private String name;
 
-    @Column
-    private String code;
+    @Column(nullable = false)
+    private double lat;
 
     @Column(nullable = false)
-    @Default
-    private String status = "PENDING";
+    private double lng;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private LocalDate date;
-
-    @Column(name = "distance_km")
-    private Double distanceKm;
-
-    @Column(name = "assigned_driver")
-    private String assignedDriver;
+    private RouteStopStage stage;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -54,12 +51,5 @@ public class Route {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    /** Returns estimated travel time based on average speed of 30 km/h. */
-    public int estimatedDurationMinutes() {
-        if (distanceKm == null) {
-            return 0;
-        }
-        return (int) ((distanceKm / 30.0) * 60);
-    }
 }
+

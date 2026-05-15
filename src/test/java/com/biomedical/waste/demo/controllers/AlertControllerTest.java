@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.biomedical.waste.demo.controllers.dto.AlertDto;
 import com.biomedical.waste.demo.models.Alert;
 import com.biomedical.waste.demo.models.AlertLevel;
 import com.biomedical.waste.demo.models.Waste;
@@ -27,7 +28,7 @@ class AlertControllerTest {
         WasteService wasteService = Mockito.mock(WasteService.class);
         AlertController controller = new AlertController(alertService, wasteService);
         when(alertService.getActive()).thenReturn(List.of());
-        ResponseEntity<List<Alert>> response = controller.getActive();
+        ResponseEntity<List<AlertDto>> response = controller.getActive();
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
@@ -37,7 +38,7 @@ class AlertControllerTest {
         WasteService wasteService = Mockito.mock(WasteService.class);
         AlertController controller = new AlertController(alertService, wasteService);
         when(alertService.getHistory()).thenReturn(List.of());
-        ResponseEntity<List<Alert>> response = controller.getHistory();
+        ResponseEntity<List<AlertDto>> response = controller.getHistory();
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
@@ -55,9 +56,10 @@ class AlertControllerTest {
             .build();
         when(wasteService.getById("w1")).thenReturn(waste);
         when(alertService.generateAlert(any(Waste.class))).thenReturn(sampleAlert("a1"));
-        ResponseEntity<Alert> response = controller.generateAlert("w1");
+        ResponseEntity<AlertDto> response = controller.generateAlert("w1");
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
+        assertEquals("a1", response.getBody().id());
         verify(alertService).generateAlert(waste);
     }
 
@@ -67,9 +69,10 @@ class AlertControllerTest {
         WasteService wasteService = Mockito.mock(WasteService.class);
         AlertController controller = new AlertController(alertService, wasteService);
         when(alertService.resolveLatest()).thenReturn(sampleAlert("a2"));
-        ResponseEntity<Alert> response = controller.resolveLatest();
+        ResponseEntity<AlertDto> response = controller.resolveLatest();
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
+        assertEquals("a2", response.getBody().id());
     }
 
     @Test

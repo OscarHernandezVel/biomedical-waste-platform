@@ -72,7 +72,10 @@ public class AIService {
             if (request.getHistory() != null) {
                 for (ChatMessage msg : request.getHistory()) {
                     if (msg != null && msg.getRole() != null && msg.getContent() != null) {
-                        messages.add(Map.of("role", msg.getRole(), "content", msg.getContent()));
+                        String role = msg.getRole().trim().toLowerCase();
+                        if ("user".equals(role) || "assistant".equals(role)) {
+                            messages.add(Map.of("role", role, "content", msg.getContent()));
+                        }
                     }
                 }
             }

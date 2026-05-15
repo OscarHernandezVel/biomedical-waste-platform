@@ -1,10 +1,12 @@
 package com.biomedical.waste.demo.services;
 
 import com.biomedical.waste.demo.models.Route;
+import com.biomedical.waste.demo.models.RouteStop;
+import com.biomedical.waste.demo.models.RouteStopStage;
 import com.biomedical.waste.demo.repository.RouteRepository;
+import com.biomedical.waste.demo.repository.RouteStopRepository;
 import com.biomedical.waste.demo.structures.RouteGraph;
 import jakarta.annotation.PostConstruct;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class RouteService {
 
     private final RouteRepository routeRepository;
+    private final RouteStopRepository routeStopRepository;
     private final RouteGraph routeGraph = new RouteGraph();
 
     /** Initializes the in-memory route graph with default biomedical collection points. */
@@ -60,6 +63,15 @@ public class RouteService {
     /** Saves a new route record to the database. */
     public Route createRoute(Route route) {
         if (route == null) throw new IllegalArgumentException("Route cannot be null");
+        if (route.getCode() == null || route.getCode().isBlank()) {
+            route.setCode("R-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        }
+        if (route.getStatus() == null || route.getStatus().isBlank()) {
+            route.setStatus("PENDING");
+        }
+        if (route.getDate() == null) {
+            route.setDate(java.time.LocalDate.now());
+        }
         return routeRepository.save(route);
     }
 
@@ -79,6 +91,9 @@ public class RouteService {
 
         if (payload.getName() != null) {
             current.setName(payload.getName());
+        }
+        if (payload.getCode() != null) {
+            current.setCode(payload.getCode());
         }
         if (payload.getStatus() != null) {
             current.setStatus(payload.getStatus());
@@ -101,33 +116,50 @@ public class RouteService {
         routeRepository.deleteById(id);
     }
 
-    public List<Map<String, Object>> getStops(String id) {
-        Route route = getById(id);
+    public List<RouteStop> listStops(String routeId) {
+        getById(routeId);
+        return routeStopRepository.findByRouteIdOrderByCreatedAtAsc(routeId);
+    }
 
-        Map<String, double[]> coords = new LinkedHashMap<>();
-        coords.put("HospitalSanRafael", new double[] { 4.710989, -74.072090 });
-        coords.put("ClinicaSur", new double[] { 4.609710, -74.081750 });
-        coords.put("LaboratorioCentral", new double[] { 4.648283, -74.247894 });
-        coords.put("CentroVeterinario", new double[] { 4.735000, -74.070000 });
-        coords.put("HospitalPediatrico", new double[] { 4.676000, -74.048000 });
-        coords.put("DepositoCentral", new double[] { 4.598100, -74.075800 });
+    public RouteStop createStop(String routeId, RouteStop stop) {
+        getById(routeId);
+        if (stop == null) {
+            throw new IllegalArgumentException("Stop cannot be null");
+        }
+        if (stop.getStage() == null) {
+            stop.setStage(RouteStopStage.GENERATED);
+        }
+        stop.setId(null);
+        stop.setRouteId(routeId);
+        return routeStopRepository.save(stop);
+    }
 
-        String start = coords.containsKey(route.getName()) ? route.getName() : "HospitalSanRafael";
-        List<String> path = routeGraph.dijkstra(start, "DepositoCentral").path;
-        if (path == null || path.isEmpty()) {
-            path = List.of(start, "DepositoCentral");
+    public RouteStop updateStop(String routeId, String stopId, RouteStop payload) {
+        getById(routeId);
+        if (payload == null) {
+            throw new IllegalArgumentException("Stop cannot be null");
+        }
+        RouteStop current = routeStopRepository.findById(stopId)
+            .filter(s -> routeId.equals(s.getRouteId()))
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parada no encontrada"));
+
+        if (payload.getName() != null) {
+            current.setName(payload.getName());
+        }
+        current.setLat(payload.getLat());
+        current.setLng(payload.getLng());
+        if (payload.getStage() != null) {
+            current.setStage(payload.getStage());
         }
 
-        return path.stream()
-            .map(name -> {
-                double[] c = coords.getOrDefault(name, new double[] { 0.0, 0.0 });
-                Map<String, Object> m = new LinkedHashMap<>();
-                m.put("name", name);
-                m.put("lat", c[0]);
-                m.put("lng", c[1]);
-                return m;
-            })
-            .toList();
+        return routeStopRepository.save(current);
+    }
+
+    public void deleteStop(String routeId, String stopId) {
+        getById(routeId);
+        RouteStop current = routeStopRepository.findById(stopId)
+            .filter(s -> routeId.equals(s.getRouteId()))
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parada no encontrada"));
+        routeStopRepository.delete(current);
     }
 }
-

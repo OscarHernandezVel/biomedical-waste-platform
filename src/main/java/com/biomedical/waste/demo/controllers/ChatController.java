@@ -6,6 +6,7 @@ import com.biomedical.waste.demo.services.AIService;
 import java.time.LocalDateTime;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -25,8 +27,18 @@ public class ChatController {
 
     /** Sends a message to the AI assistant and returns its response. */
     @PostMapping
-    public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest request) {
-        return ResponseEntity.ok(aiService.chat(request));
+    public ResponseEntity<?> chat(@RequestBody ChatRequest request) {
+        if (request == null || request.getMessage() == null || request.getMessage().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El mensaje no puede estar vacío");
+        }
+        ChatResponse response = aiService.chat(request);
+        if (!response.isSuccess()) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "message", response.getMessage(),
+                "error", response.getError()
+            ));
+        }
+        return ResponseEntity.ok(Map.of("reply", response.getMessage()));
     }
 
     /** Returns a predefined answer for a supported topic without calling the AI provider. */

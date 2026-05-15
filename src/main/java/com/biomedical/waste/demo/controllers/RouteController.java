@@ -1,6 +1,7 @@
 package com.biomedical.waste.demo.controllers;
 
 import com.biomedical.waste.demo.models.Route;
+import com.biomedical.waste.demo.models.RouteStop;
 import com.biomedical.waste.demo.services.RouteService;
 import com.biomedical.waste.demo.structures.RouteGraph;
 import java.util.List;
@@ -55,8 +56,24 @@ public class RouteController {
     }
 
     @GetMapping("/{id}/stops")
-    public ResponseEntity<List<Map<String, Object>>> stops(@PathVariable String id) {
-        return ResponseEntity.ok(routeService.getStops(id));
+    public ResponseEntity<List<RouteStop>> listStops(@PathVariable String id) {
+        return ResponseEntity.ok(routeService.listStops(id));
+    }
+
+    @PostMapping("/{id}/stops")
+    public ResponseEntity<RouteStop> createStop(@PathVariable String id, @RequestBody RouteStop stop) {
+        return ResponseEntity.ok(routeService.createStop(id, stop));
+    }
+
+    @PutMapping("/{id}/stops/{stopId}")
+    public ResponseEntity<RouteStop> updateStop(@PathVariable String id, @PathVariable String stopId, @RequestBody RouteStop payload) {
+        return ResponseEntity.ok(routeService.updateStop(id, stopId, payload));
+    }
+
+    @DeleteMapping("/{id}/stops/{stopId}")
+    public ResponseEntity<Void> deleteStop(@PathVariable String id, @PathVariable String stopId) {
+        routeService.deleteStop(id, stopId);
+        return ResponseEntity.noContent().build();
     }
 
     /** Returns the optimal route between two collection points using Dijkstra. */

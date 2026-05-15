@@ -1,5 +1,6 @@
 package com.biomedical.waste.demo.controllers;
 
+import com.biomedical.waste.demo.controllers.dto.AlertDto;
 import com.biomedical.waste.demo.models.Alert;
 import com.biomedical.waste.demo.models.AlertLevel;
 import com.biomedical.waste.demo.models.Waste;
@@ -29,27 +30,27 @@ public class AlertController {
 
     /** Returns all currently active (unresolved) alerts. */
     @GetMapping
-    public ResponseEntity<List<Alert>> getActive() {
-        return ResponseEntity.ok(alertService.getActive());
+    public ResponseEntity<List<AlertDto>> getActive() {
+        return ResponseEntity.ok(alertService.getActive().stream().map(AlertController::toDto).toList());
     }
 
     /** Returns the full alert history from the stack (most recent first). */
     @GetMapping("/history")
-    public ResponseEntity<List<Alert>> getHistory() {
-        return ResponseEntity.ok(alertService.getHistory());
+    public ResponseEntity<List<AlertDto>> getHistory() {
+        return ResponseEntity.ok(alertService.getHistory().stream().map(AlertController::toDto).toList());
     }
 
     /** Generates an alert for the specified waste item. */
     @PostMapping("/generate/{wasteId}")
-    public ResponseEntity<Alert> generateAlert(@PathVariable String wasteId) {
+    public ResponseEntity<AlertDto> generateAlert(@PathVariable String wasteId) {
         Waste waste = wasteService.getById(wasteId);
-        return ResponseEntity.ok(alertService.generateAlert(waste));
+        return ResponseEntity.ok(toDto(alertService.generateAlert(waste)));
     }
 
     /** Resolves the most recent alert by popping it from the history stack. */
     @PutMapping("/resolve-latest")
-    public ResponseEntity<Alert> resolveLatest() {
-        return ResponseEntity.ok(alertService.resolveLatest());
+    public ResponseEntity<AlertDto> resolveLatest() {
+        return ResponseEntity.ok(toDto(alertService.resolveLatest()));
     }
 
     /** Returns the number of alerts for the given severity level. */
@@ -59,14 +60,22 @@ public class AlertController {
     }
 
     @PatchMapping("/{id}/read")
-    public ResponseEntity<Alert> markRead(@PathVariable String id) {
-        return ResponseEntity.ok(alertService.markRead(id));
+    public ResponseEntity<AlertDto> markRead(@PathVariable String id) {
+        return ResponseEntity.ok(toDto(alertService.markRead(id)));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable String id) {
         alertService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private static AlertDto toDto(Alert alert) {
+        String level = alert.getLevel() == null ? null : alert.getLevel().name().toLowerCase();
+        String createdAt = alert.getDate() == null ? null : alert.getDate().toString();
+        String entityId = alert.getWasteId() == null ? null : "waste-" + alert.getWasteId();
+        boolean resolved = Boolean.TRUE.equals(alert.getResolved());
+        return new AlertDto(alert.getId(), level, alert.getMessage(), createdAt, entityId, resolved);
     }
 }
 
