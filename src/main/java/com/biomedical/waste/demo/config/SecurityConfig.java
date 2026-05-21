@@ -26,6 +26,8 @@ import com.biomedical.waste.demo.security.RestAuthenticationEntryPoint;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import org.springframework.core.annotation.Order;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -42,8 +44,10 @@ public class SecurityConfig {
     private String supabaseJwtSecret;
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    @Order(1)
+    SecurityFilterChain adminFilterChain(HttpSecurity http) throws Exception {
         http
+            .securityMatcher("/api/admin/**")
             .csrf(AbstractHttpConfigurer::disable)
             .cors(Customizer.withDefaults())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -54,11 +58,25 @@ public class SecurityConfig {
             .addFilterAfter(adminKeyRequiredFilter, BearerTokenAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/admin/**").authenticated()
-                .requestMatchers("/api/**").permitAll()
-                .anyRequest().permitAll()
+                .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+            .httpBasic(AbstractHttpConfigurer::disable)
+            .formLogin(AbstractHttpConfigurer::disable);
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
+    SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(AbstractHttpConfigurer::disable)
+            .cors(Customizer.withDefaults())
+            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().permitAll()
+            )
             .httpBasic(AbstractHttpConfigurer::disable)
             .formLogin(AbstractHttpConfigurer::disable);
 
@@ -70,15 +88,23 @@ public class SecurityConfig {
         String ref = supabaseProjectRef == null ? "" : supabaseProjectRef.trim();
         String secret = supabaseJwtSecret == null ? "" : supabaseJwtSecret.trim();
 
+        if (secret.isBlank() && ref.isBlank()) {
+            // Retorna un decodificador dummy para evitar que la aplicación crashee al iniciar
+            // si no se han configurado las variables de entorno de Supabase.
+            return token -> {
+                throw new org.springframework.security.oauth2.jwt.JwtValidationException(
+                    "Supabase no configurado en el backend",
+                    java.util.List.of(new org.springframework.security.oauth2.core.OAuth2Error("config_missing"))
+                );
+            };
+        }
+
         NimbusJwtDecoder decoder;
 
         if (!secret.isBlank()) {
             SecretKey key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
             decoder = NimbusJwtDecoder.withSecretKey(key).macAlgorithm(MacAlgorithm.HS256).build();
         } else {
-            if (ref.isBlank()) {
-                throw new IllegalStateException("Falta configurar SUPABASE_PROJECT_REF o SUPABASE_JWT_SECRET");
-            }
             String jwkSetUri = "https://" + ref + ".supabase.co/auth/v1/.well-known/jwks.json";
             decoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
         }

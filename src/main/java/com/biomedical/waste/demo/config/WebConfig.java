@@ -20,7 +20,8 @@ public class WebConfig {
                 Stream.of(
                     "http://localhost:5173",
                     "http://localhost:3000",
-                    "https://traebiomedical-frontedxit2.vercel.app"
+                    "https://traebiomedical-frontedxit2.vercel.app",
+                    "https://biomedical-frontedxit2-8xnq5x7wk-camilo-rosero.vercel.app"
                 )
             )
             .distinct()
