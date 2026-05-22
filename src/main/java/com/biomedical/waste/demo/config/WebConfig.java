@@ -1,8 +1,5 @@
 package com.biomedical.waste.demo.config;
 
-import java.util.Arrays;
-import java.util.stream.Stream;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -10,30 +7,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig {
-    @Value("${app.cors.origin:http://localhost:5173}")
-    private String corsOrigin;
 
     @Bean
     public WebMvcConfigurer corsConfigurer() {
-        String[] origins = Stream.concat(
-                Arrays.stream(corsOrigin.split(",")).map(String::trim).filter(s -> !s.isBlank()),
-                Stream.of(
-                    "http://localhost:5173",
-                    "http://localhost:3000",
-                    "https://traebiomedical-frontedxit2.vercel.app",
-                    "https://biomedical-frontedxit2-8xnq5x7wk-camilo-rosero.vercel.app"
-                )
-            )
-            .distinct()
-            .toArray(String[]::new);
-
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                    .allowedOrigins(origins)
+                    .allowedOriginPatterns("*")
                     .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                    .allowedHeaders("Authorization", "Content-Type", "X-Admin-Key")
+                    .allowedHeaders("*")
                     .exposedHeaders("Authorization")
                     .allowCredentials(false);
             }
