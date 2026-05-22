@@ -25,22 +25,22 @@ import org.springframework.web.client.RestClientException;
 @RequiredArgsConstructor
 public class AIService {
 
-    private static final String OPENAI_URL = "https://api.openai.com/v1/chat/completions";
+    private static final String GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s";
 
     private final WasteRepository wasteRepository;
     private final AlertRepository alertRepository;
     private final RestTemplateBuilder restTemplateBuilder;
 
-    @Value("${openai.api.key:}")
-    private String openaiApiKey;
+    @Value("${gemini.api.key:}")
+    private String geminiApiKey;
 
-    @Value("${openai.model:gpt-3.5-turbo}")
+    @Value("${gemini.model:gemini-2.0-flash}")
     private String model;
 
-    @Value("${openai.max-tokens:1000}")
+    @Value("${gemini.max-tokens:1000}")
     private int maxTokens;
 
-    @Value("${openai.temperature:0.7}")
+    @Value("${gemini.temperature:0.7}")
     private double temperature;
 
     /** Sends a message to the assistant and returns the model response. */
@@ -58,7 +58,7 @@ public class AIService {
             return quick;
         }
 
-        if (openaiApiKey == null || openaiApiKey.isBlank()) {
+        if (geminiApiKey == null || geminiApiKey.isBlank()) {
             return ChatResponse.builder()
                 .message(buildOfflineAssistantResponse(request.getMessage()))
                 .success(true)
@@ -67,34 +67,50 @@ public class AIService {
         }
 
         try {
-            List<Map<String, String>> messages = new ArrayList<>();
-            messages.add(Map.of("role", "system", "content", buildSystemPrompt()));
+            // Build Gemini request body
+            List<Map<String, Object>> contents = new ArrayList<>();
+
+            // System instruction as first user message context
+            String systemPrompt = buildSystemPrompt();
+
+            // Add history if present
             if (request.getHistory() != null) {
                 for (ChatMessage msg : request.getHistory()) {
                     if (msg != null && msg.getRole() != null && msg.getContent() != null) {
                         String role = msg.getRole().trim().toLowerCase();
-                        if ("user".equals(role) || "assistant".equals(role)) {
-                            messages.add(Map.of("role", role, "content", msg.getContent()));
-                        }
+                        String geminiRole = "user".equals(role) ? "user" : "model";
+                        contents.add(Map.of(
+                            "role", geminiRole,
+                            "parts", List.of(Map.of("text", msg.getContent()))
+                        ));
                     }
                 }
             }
-            messages.add(Map.of("role", "user", "content", request.getMessage()));
+
+            // Add current user message with system context
+            String userMessage = systemPrompt + "\n\nUsuario: " + request.getMessage();
+            contents.add(Map.of(
+                "role", "user",
+                "parts", List.of(Map.of("text", userMessage))
+            ));
+
+            Map<String, Object> generationConfig = new HashMap<>();
+            generationConfig.put("maxOutputTokens", maxTokens);
+            generationConfig.put("temperature", temperature);
 
             Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", model);
-            requestBody.put("messages", messages);
-            requestBody.put("max_tokens", maxTokens);
-            requestBody.put("temperature", temperature);
+            requestBody.put("contents", contents);
+            requestBody.put("generationConfig", generationConfig);
+
+            String url = String.format(GEMINI_URL, model, geminiApiKey);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBearerAuth(openaiApiKey);
 
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-            ResponseEntity<Map> response = restTemplateBuilder.build().postForEntity(OPENAI_URL, entity, Map.class);
+            ResponseEntity<Map> response = restTemplateBuilder.build().postForEntity(url, entity, Map.class);
 
-            String content = extractAssistantContent(response.getBody());
+            String content = extractGeminiContent(response.getBody());
             if (content == null || content.isBlank()) {
                 return ChatResponse.builder()
                     .message("No se pudo obtener respuesta del asistente.")
@@ -163,7 +179,7 @@ public class AIService {
         }
 
         return base + "Puedo ayudarte con: tipos de residuos, tratamientos, normativa, rutas/órdenes y alertas.\n" +
-            "Para respuestas completas con IA, configura `OPENAI_API_KEY` en Railway/Vercel (backend).";
+            "Para respuestas completas con IA, configura `GEMINI_API_KEY` en Railway (backend).";
     }
 
     /** Returns a predefined answer for common topics or null when not applicable. */
@@ -230,24 +246,32 @@ public class AIService {
             """.formatted(totalWastes, activeAlerts, highRiskAlerts);
     }
 
-    private String extractAssistantContent(Map body) {
+    /** Extracts the text content from a Gemini API response. */
+    private String extractGeminiContent(Map body) {
         if (body == null) {
             return null;
         }
-        Object choicesObj = body.get("choices");
-        if (!(choicesObj instanceof List<?> choices) || choices.isEmpty()) {
+        Object candidatesObj = body.get("candidates");
+        if (!(candidatesObj instanceof List<?> candidates) || candidates.isEmpty()) {
             return null;
         }
-        Object first = choices.get(0);
-        if (!(first instanceof Map<?, ?> choice)) {
+        Object first = candidates.get(0);
+        if (!(first instanceof Map<?, ?> candidate)) {
             return null;
         }
-        Object messageObj = choice.get("message");
-        if (!(messageObj instanceof Map<?, ?> message)) {
+        Object contentObj = candidate.get("content");
+        if (!(contentObj instanceof Map<?, ?> content)) {
             return null;
         }
-        Object content = message.get("content");
-        return content instanceof String s ? s : null;
+        Object partsObj = content.get("parts");
+        if (!(partsObj instanceof List<?> parts) || parts.isEmpty()) {
+            return null;
+        }
+        Object firstPart = parts.get(0);
+        if (!(firstPart instanceof Map<?, ?> part)) {
+            return null;
+        }
+        Object text = part.get("text");
+        return text instanceof String s ? s : null;
     }
 }
-
