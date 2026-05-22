@@ -8,6 +8,7 @@ import com.biomedical.waste.demo.repository.AlertRepository;
 import com.biomedical.waste.demo.repository.WasteRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -128,6 +130,72 @@ public class AIService {
             return ChatResponse.builder()
                 .message(buildOfflineAssistantResponse(request.getMessage()))
                 .success(true)
+                .error(e.getMessage())
+                .timestamp(LocalDateTime.now().toString())
+                .build();
+        }
+    }
+
+    /** Analyzes text + image using Gemini multimodal capabilities. */
+    public ChatResponse analyzeWithImage(String prompt, MultipartFile image) {
+        if (geminiApiKey == null || geminiApiKey.isBlank()) {
+            return ChatResponse.builder()
+                .message("Análisis de imagen no disponible en modo offline. Configura GEMINI_API_KEY.")
+                .success(false)
+                .timestamp(LocalDateTime.now().toString())
+                .build();
+        }
+
+        try {
+            byte[] imageBytes = image.getBytes();
+            String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+            String mimeType = image.getContentType() != null ? image.getContentType() : "image/jpeg";
+
+            // Build multimodal parts: text + image
+            List<Map<String, Object>> parts = new ArrayList<>();
+            parts.add(Map.of("text", prompt));
+            parts.add(Map.of("inlineData", Map.of(
+                "mimeType", mimeType,
+                "data", base64Image
+            )));
+
+            List<Map<String, Object>> contents = new ArrayList<>();
+            contents.add(Map.of("role", "user", "parts", parts));
+
+            Map<String, Object> generationConfig = new HashMap<>();
+            generationConfig.put("maxOutputTokens", maxTokens);
+            generationConfig.put("temperature", temperature);
+
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("contents", contents);
+            requestBody.put("generationConfig", generationConfig);
+
+            String url = String.format(GEMINI_URL, model, geminiApiKey);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+            ResponseEntity<Map> response = restTemplateBuilder.build().postForEntity(url, entity, Map.class);
+
+            String content = extractGeminiContent(response.getBody());
+            if (content == null || content.isBlank()) {
+                return ChatResponse.builder()
+                    .message("No se pudo analizar la imagen.")
+                    .success(false)
+                    .timestamp(LocalDateTime.now().toString())
+                    .build();
+            }
+
+            return ChatResponse.builder()
+                .message(content.trim())
+                .success(true)
+                .timestamp(LocalDateTime.now().toString())
+                .build();
+        } catch (Exception e) {
+            return ChatResponse.builder()
+                .message("Error al analizar la imagen: " + e.getMessage())
+                .success(false)
                 .error(e.getMessage())
                 .timestamp(LocalDateTime.now().toString())
                 .build();

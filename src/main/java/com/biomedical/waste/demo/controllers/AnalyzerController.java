@@ -40,10 +40,16 @@ public class AnalyzerController {
 
         String prompt = buildAnalyzerPrompt(analysisType, text, context, image);
 
-        ChatRequest chatRequest = new ChatRequest();
-        chatRequest.setMessage(prompt);
-
-        ChatResponse chatResponse = aiService.chat(chatRequest);
+        ChatResponse chatResponse;
+        if (image != null && !image.isEmpty()) {
+            // Use multimodal analysis with image
+            chatResponse = aiService.analyzeWithImage(prompt, image);
+        } else {
+            // Text-only analysis
+            ChatRequest chatRequest = new ChatRequest();
+            chatRequest.setMessage(prompt);
+            chatResponse = aiService.chat(chatRequest);
+        }
 
         Map<String, Object> result = new HashMap<>();
         result.put("title", buildTitle(analysisType));
