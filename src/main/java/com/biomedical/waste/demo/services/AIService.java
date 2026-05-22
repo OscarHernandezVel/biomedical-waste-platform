@@ -31,7 +31,7 @@ public class AIService {
     private final AlertRepository alertRepository;
     private final RestTemplateBuilder restTemplateBuilder;
 
-    @Value("${gemini.api.key:}")
+    @Value("${gemini.api.key:${GOOGLE_API_KEY:${GEMINI_API_KEY:}}}")
     private String geminiApiKey;
 
     @Value("${gemini.model:gemini-2.0-flash}")
