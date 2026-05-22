@@ -66,7 +66,7 @@ public class AnalyzerController {
 
     private String buildAnalyzerPrompt(String analysisType, String text, String context, MultipartFile image) {
         StringBuilder prompt = new StringBuilder();
-        prompt.append("Actúa como un analista experto en gestión de residuos biomédicos. ");
+        prompt.append("Eres un analista experto en gestión de residuos biomédicos en Colombia, con conocimiento en normativa (Decreto 351/2014, Resolución 1164/2002). ");
         prompt.append("Tipo de análisis solicitado: ").append(analysisType).append(".\n\n");
 
         if (context != null && !context.isBlank()) {
@@ -78,14 +78,16 @@ public class AnalyzerController {
         }
 
         if (image != null && !image.isEmpty()) {
-            prompt.append("[Se adjuntó una imagen: ").append(image.getOriginalFilename()).append("]\n\n");
+            prompt.append("Se adjuntó una imagen para análisis visual. Descríbela en detalle y relacónala con el contexto de residuos biomédicos.\n\n");
         }
 
-        prompt.append("Responde en español con:\n");
-        prompt.append("1. Un resumen ejecutivo del análisis.\n");
-        prompt.append("2. Hallazgos principales.\n");
-        prompt.append("3. Recomendaciones concretas (lista numerada).\n");
-        prompt.append("4. Nivel de riesgo o relevancia si aplica.\n");
+        prompt.append("Proporciona un análisis profesional y detallado en español que incluya:\n");
+        prompt.append("1. RESUMEN EJECUTIVO: Descripción clara de la situación analizada.\n");
+        prompt.append("2. HALLAZGOS PRINCIPALES: Lista detallada de lo encontrado.\n");
+        prompt.append("3. EVALUACIÓN DE RIESGO: Nivel de riesgo (bajo/medio/alto/crítico) con justificación.\n");
+        prompt.append("4. CUMPLIMIENTO NORMATIVO: Relación con Decreto 351/2014 y Resolución 1164/2002 si aplica.\n");
+        prompt.append("5. RECOMENDACIONES: Lista numerada de acciones concretas a tomar.\n");
+        prompt.append("6. PRIORIDAD: Indicar urgencia de atención.\n");
 
         return prompt.toString();
     }
