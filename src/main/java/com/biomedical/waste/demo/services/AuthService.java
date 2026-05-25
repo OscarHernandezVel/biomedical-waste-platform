@@ -110,6 +110,9 @@ public class AuthService {
         if (password == null || password.length() < 8) {
             throw new IllegalArgumentException("La contraseña debe tener al menos 8 caracteres.");
         }
+        if (password.length() > 22) {
+            throw new IllegalArgumentException("La contraseña no puede tener más de 22 caracteres.");
+        }
         if (!password.matches(".*[A-Z].*")) {
             throw new IllegalArgumentException("La contraseña debe contener al menos una letra mayúscula.");
         }
