@@ -2,8 +2,11 @@ package com.biomedical.waste.demo.controllers;
 
 import com.biomedical.waste.demo.models.ChatRequest;
 import com.biomedical.waste.demo.models.ChatResponse;
+import com.biomedical.waste.demo.models.AiInteraction;
 import com.biomedical.waste.demo.services.AIService;
+import com.biomedical.waste.demo.repository.AiInteractionRepository;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,6 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class ChatController {
 
     private final AIService aiService;
+    private final AiInteractionRepository aiInteractionRepository;
 
     /** Sends a message to the AI assistant and returns its response. */
     @PostMapping
@@ -32,6 +36,14 @@ public class ChatController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El mensaje no puede estar vacío");
         }
         ChatResponse response = aiService.chat(request);
+
+        // Save interaction to database
+        aiInteractionRepository.save(AiInteraction.builder()
+            .type("chat")
+            .userInput(request.getMessage())
+            .aiResponse(response.getMessage())
+            .build());
+
         if (!response.isSuccess()) {
             String msg = response.getMessage();
             if (response.getError() != null && !response.getError().isBlank()) {
@@ -60,6 +72,12 @@ public class ChatController {
             "assistant", "Asistente de Residuos Biomédicos",
             "timestamp", LocalDateTime.now().toString()
         ));
+    }
+
+    /** Returns the history of all AI interactions saved in the database. */
+    @GetMapping("/history")
+    public ResponseEntity<List<AiInteraction>> getHistory() {
+        return ResponseEntity.ok(aiInteractionRepository.findTop50ByOrderByCreatedAtDesc());
     }
 }
 

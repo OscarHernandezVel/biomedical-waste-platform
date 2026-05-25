@@ -3,6 +3,8 @@ package com.biomedical.waste.demo.controllers;
 import com.biomedical.waste.demo.services.AIService;
 import com.biomedical.waste.demo.models.ChatRequest;
 import com.biomedical.waste.demo.models.ChatResponse;
+import com.biomedical.waste.demo.models.AiInteraction;
+import com.biomedical.waste.demo.repository.AiInteractionRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class AnalyzerController {
 
     private final AIService aiService;
+    private final AiInteractionRepository aiInteractionRepository;
 
     /**
      * Analyzes text/image input using AI and returns structured results.
@@ -60,6 +63,16 @@ public class AnalyzerController {
         result.put("relevanceScore", 0.9);
         result.put("relevanceReason", "Análisis generado por IA para: " + analysisType);
         result.put("timestamp", LocalDateTime.now().toString());
+
+        // Save interaction to database
+        String imageName = (image != null && !image.isEmpty()) ? image.getOriginalFilename() : null;
+        aiInteractionRepository.save(AiInteraction.builder()
+            .type("analyzer")
+            .userInput(text != null ? text : (imageName != null ? "[Imagen: " + imageName + "]" : ""))
+            .aiResponse(chatResponse.getMessage())
+            .analysisType(analysisType)
+            .imageName(imageName)
+            .build());
 
         return ResponseEntity.ok(result);
     }
