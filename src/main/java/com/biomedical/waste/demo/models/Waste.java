@@ -47,6 +47,9 @@ public class Waste implements Cloneable {
     @Column(name = "treatment_method")
     private String treatmentMethod;
 
+    @Column
+    private String description;
+
     @PrePersist
     private void prePersist() {
         if (generationDate == null) {
