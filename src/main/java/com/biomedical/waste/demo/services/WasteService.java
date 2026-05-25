@@ -55,6 +55,7 @@ public class WasteService {
             .withDate(waste.getGenerationDate())
             .withStatus(waste.getStatus())
             .build();
+        validated.setDescription(waste.getDescription());
         Waste saved = wasteRepository.save(validated);
         collectionQueue.enqueue(saved);
         weightTree.insert(saved.getWeightKg());
@@ -74,6 +75,7 @@ public class WasteService {
         existing.setWeightKg(waste.getWeightKg());
         existing.setOriginEntity(waste.getOriginEntity());
         existing.setTreatmentMethod(waste.getTreatmentMethod());
+        existing.setDescription(waste.getDescription());
         return wasteRepository.save(existing);
     }
 
