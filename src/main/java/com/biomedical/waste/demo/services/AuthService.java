@@ -33,9 +33,7 @@ public class AuthService {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("El correo es obligatorio.");
         }
-        if (password == null || password.length() < 6) {
-            throw new IllegalArgumentException("La contraseña debe tener al menos 6 caracteres.");
-        }
+        validatePassword(password);
         if (userRepository.existsByEmail(email.trim().toLowerCase())) {
             throw new IllegalArgumentException("Ese correo ya está registrado.");
         }
@@ -97,6 +95,32 @@ public class AuthService {
             return userRepository.findByEmail(email).orElse(null);
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    /**
+     * Validates password strength:
+     * - Minimum 8 characters
+     * - At least one uppercase letter
+     * - At least one lowercase letter
+     * - At least one digit
+     * - At least one special character
+     */
+    private void validatePassword(String password) {
+        if (password == null || password.length() < 8) {
+            throw new IllegalArgumentException("La contraseña debe tener al menos 8 caracteres.");
+        }
+        if (!password.matches(".*[A-Z].*")) {
+            throw new IllegalArgumentException("La contraseña debe contener al menos una letra mayúscula.");
+        }
+        if (!password.matches(".*[a-z].*")) {
+            throw new IllegalArgumentException("La contraseña debe contener al menos una letra minúscula.");
+        }
+        if (!password.matches(".*\\d.*")) {
+            throw new IllegalArgumentException("La contraseña debe contener al menos un número.");
+        }
+        if (!password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?].*")) {
+            throw new IllegalArgumentException("La contraseña debe contener al menos un carácter especial (!@#$%^&*...).");
         }
     }
 
