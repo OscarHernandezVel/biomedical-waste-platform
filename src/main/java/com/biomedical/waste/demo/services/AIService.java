@@ -295,6 +295,36 @@ public class AIService {
         long activeAlerts = alertRepository.findByResolved(false).size();
         long highRiskAlerts = alertRepository.countByLevel(AlertLevel.HIGH);
 
+        // Get waste details
+        StringBuilder wasteDetails = new StringBuilder();
+        var wastes = wasteRepository.findAll();
+        if (!wastes.isEmpty()) {
+            wasteDetails.append("\n            RESIDUOS REGISTRADOS:\n");
+            for (var w : wastes) {
+                wasteDetails.append("            - ID: ").append(w.getId())
+                    .append(" | Tipo: ").append(w.getType())
+                    .append(" | Peso: ").append(w.getWeightKg()).append(" kg")
+                    .append(" | Entidad: ").append(w.getOriginEntity())
+                    .append(" | Estado: ").append(w.getStatus());
+                if (w.getDescription() != null && !w.getDescription().isBlank()) {
+                    wasteDetails.append(" | Descripción: ").append(w.getDescription());
+                }
+                wasteDetails.append("\n");
+            }
+        }
+
+        // Get alert details
+        StringBuilder alertDetails = new StringBuilder();
+        var alerts = alertRepository.findByResolved(false);
+        if (!alerts.isEmpty()) {
+            alertDetails.append("\n            ALERTAS ACTIVAS:\n");
+            for (var a : alerts) {
+                alertDetails.append("            - Nivel: ").append(a.getLevel())
+                    .append(" | Mensaje: ").append(a.getMessage())
+                    .append("\n");
+            }
+        }
+
         return """
             Eres un asistente especializado en gestión de residuos biomédicos en Colombia.
             Responde siempre en español, con tono profesional y claro.
@@ -303,15 +333,16 @@ public class AIService {
             - Total de residuos registrados: %d
             - Alertas activas sin resolver: %d
             - Alertas de alto riesgo: %d
-
+            %s%s
             ALCANCE:
             - Tipos de residuos biomédicos, tratamientos, alertas, rutas y logística.
             - Normativa: Decreto 351 de 2014 y Resolución 1164 de 2002 (resumen informativo).
 
             INSTRUCCIONES:
             - Usa los datos en tiempo real cuando sean relevantes.
+            - Cuando te pregunten por residuos registrados, muestra la lista detallada.
             - Si falta información específica, indícalo claramente.
-            """.formatted(totalWastes, activeAlerts, highRiskAlerts);
+            """.formatted(totalWastes, activeAlerts, highRiskAlerts, wasteDetails.toString(), alertDetails.toString());
     }
 
     /** Extracts the text content from a Gemini API response. */
