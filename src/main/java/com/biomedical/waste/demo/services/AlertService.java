@@ -25,11 +25,17 @@ public class AlertService {
             throw new IllegalArgumentException("Waste cannot be null");
         }
         AlertLevel level = determineLevel(waste);
+        String typeLabel = switch (waste.getType()) {
+            case INFECTIOUS -> "Infeccioso";
+            case SHARPS -> "Cortopunzante";
+            case CHEMICAL -> "Químico";
+            case PHARMACEUTICAL -> "Farmacéutico";
+            case ANATOMICAL -> "Anatómico";
+        };
         Alert alert = Alert.builder()
-            .message("Risk detected for waste " + waste.getId()
-                + " from " + waste.getOriginEntity()
-                + " | Type: " + waste.getType().name()
-                + " | Risk level: " + waste.getType().getRiskLevel())
+            .message("Riesgo detectado: Residuo " + typeLabel
+                + " (" + waste.getWeightKg() + " kg) de " + waste.getOriginEntity()
+                + " — Nivel de riesgo: " + waste.getType().getRiskLevel())
             .level(level)
             .wasteId(waste.getId())
             .resolved(false)
