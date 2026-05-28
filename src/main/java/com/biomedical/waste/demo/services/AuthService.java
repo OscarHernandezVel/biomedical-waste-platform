@@ -31,14 +31,14 @@ public class AuthService {
 
     public AuthResponse register(String email, String password, String fullName) {
         if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("El correo es obligatorio.");
+            throw new IllegalArgumentException("Email is required.");
         }
         if (!isValidEmail(email)) {
-            throw new IllegalArgumentException("Ingresa un correo válido con dominio real (ej: usuario@gmail.com).");
+            throw new IllegalArgumentException("Enter a valid email with a real domain (e.g. user@gmail.com).");
         }
         validatePassword(password);
         if (userRepository.existsByEmail(email.trim().toLowerCase())) {
-            throw new IllegalArgumentException("Ese correo ya está registrado.");
+            throw new IllegalArgumentException("That email is already registered.");
         }
 
         User user = User.builder()
@@ -55,14 +55,14 @@ public class AuthService {
 
     public AuthResponse login(String email, String password) {
         if (email == null || email.isBlank() || password == null || password.isBlank()) {
-            throw new IllegalArgumentException("Correo y contraseña son obligatorios.");
+            throw new IllegalArgumentException("Email and password are required.");
         }
 
         User user = userRepository.findByEmail(email.trim().toLowerCase())
-            .orElseThrow(() -> new IllegalArgumentException("Credenciales inválidas."));
+            .orElseThrow(() -> new IllegalArgumentException("Invalid credentials."));
 
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-            throw new IllegalArgumentException("Credenciales inválidas.");
+            throw new IllegalArgumentException("Invalid credentials.");
         }
 
         String token = generateToken(user);
@@ -119,26 +119,26 @@ public class AuthService {
      */
     private void validatePassword(String password) {
         if (password == null || password.length() < 8) {
-            throw new IllegalArgumentException("La contraseña debe tener al menos 8 caracteres.");
+            throw new IllegalArgumentException("Password must be at least 8 characters.");
         }
         // If password is a SHA-256 hash (64 hex chars), skip further validation
         if (password.length() == 64 && password.matches("^[a-f0-9]+$")) {
             return;
         }
         if (password.length() > 22) {
-            throw new IllegalArgumentException("La contraseña no puede tener más de 22 caracteres.");
+            throw new IllegalArgumentException("Password cannot exceed 22 characters.");
         }
         if (!password.matches(".*[A-Z].*")) {
-            throw new IllegalArgumentException("La contraseña debe contener al menos una letra mayúscula.");
+            throw new IllegalArgumentException("Password must contain at least one uppercase letter.");
         }
         if (!password.matches(".*[a-z].*")) {
-            throw new IllegalArgumentException("La contraseña debe contener al menos una letra minúscula.");
+            throw new IllegalArgumentException("Password must contain at least one lowercase letter.");
         }
         if (!password.matches(".*\\d.*")) {
-            throw new IllegalArgumentException("La contraseña debe contener al menos un número.");
+            throw new IllegalArgumentException("Password must contain at least one digit.");
         }
         if (!password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?].*")) {
-            throw new IllegalArgumentException("La contraseña debe contener al menos un carácter especial (!@#$%^&*...).");
+            throw new IllegalArgumentException("Password must contain at least one special character (!@#$%^&*...).");
         }
     }
 

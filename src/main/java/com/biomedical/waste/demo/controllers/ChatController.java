@@ -33,7 +33,7 @@ public class ChatController {
     @PostMapping
     public ResponseEntity<?> chat(@RequestBody ChatRequest request) {
         if (request == null || request.getMessage() == null || request.getMessage().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El mensaje no puede estar vacío");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Message cannot be empty");
         }
         ChatResponse response = aiService.chat(request);
 
@@ -69,7 +69,7 @@ public class ChatController {
     public ResponseEntity<Map<String, String>> status() {
         return ResponseEntity.ok(Map.of(
             "status", "online",
-            "assistant", "Asistente de Residuos Biomédicos",
+            "assistant", "Biomedical Waste Assistant",
             "timestamp", LocalDateTime.now().toString()
         ));
     }

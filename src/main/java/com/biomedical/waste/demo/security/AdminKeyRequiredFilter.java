@@ -46,7 +46,7 @@ public class AdminKeyRequiredFilter extends OncePerRequestFilter {
         if (header == null || !header.equals(adminKey)) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            response.getWriter().write("{\"message\":\"Acceso denegado\"}");
+            response.getWriter().write("{\"message\":\"Access denied\"}");
             return;
         }
 

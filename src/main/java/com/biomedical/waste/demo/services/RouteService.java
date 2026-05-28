@@ -80,7 +80,7 @@ public class RouteService {
             throw new IllegalArgumentException("Route id cannot be empty");
         }
         return routeRepository.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ruta no encontrada"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Route not found"));
     }
 
     public Route updateRoute(String id, Route payload) {
@@ -141,7 +141,7 @@ public class RouteService {
         }
         RouteStop current = routeStopRepository.findById(stopId)
             .filter(s -> routeId.equals(s.getRouteId()))
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parada no encontrada"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Stop not found"));
 
         if (payload.getName() != null) {
             current.setName(payload.getName());
@@ -159,7 +159,7 @@ public class RouteService {
         getById(routeId);
         RouteStop current = routeStopRepository.findById(stopId)
             .filter(s -> routeId.equals(s.getRouteId()))
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parada no encontrada"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Stop not found"));
         routeStopRepository.delete(current);
     }
 }
