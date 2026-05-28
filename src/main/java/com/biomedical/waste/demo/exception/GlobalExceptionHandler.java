@@ -33,7 +33,7 @@ public class GlobalExceptionHandler {
     /** Handles missing static resources and returns a 404 response body. */
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNoResource(NoResourceFoundException ex, HttpServletRequest req) {
-        return buildResponse(HttpStatus.NOT_FOUND, "No encontrado");
+        return buildResponse(HttpStatus.NOT_FOUND, "Not found");
     }
 
     @ExceptionHandler(ResponseStatusException.class)
@@ -45,13 +45,13 @@ public class GlobalExceptionHandler {
     /** Handles database integrity errors (e.g. duplicate keys, foreign key constraints) */
     @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, Object>> handleDataIntegrity(org.springframework.dao.DataIntegrityViolationException ex, HttpServletRequest req) {
-        return buildResponse(HttpStatus.CONFLICT, "Conflicto: " + ex.getMostSpecificCause().getMessage());
+        return buildResponse(HttpStatus.CONFLICT, "Conflict: " + ex.getMostSpecificCause().getMessage());
     }
 
     /** Handles generic errors and returns a 500 response body. */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex, HttpServletRequest req) {
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno");
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
     }
 
     private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String message) {

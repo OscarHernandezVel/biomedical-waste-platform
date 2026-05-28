@@ -61,7 +61,7 @@ public class AnalyzerController {
         result.put("recommendations", extractRecommendations(chatResponse.getMessage()));
         result.put("isRelevant", true);
         result.put("relevanceScore", 0.9);
-        result.put("relevanceReason", "Análisis generado por IA para: " + analysisType);
+        result.put("relevanceReason", "AI-generated analysis for: " + analysisType);
         result.put("timestamp", LocalDateTime.now().toString());
 
         // Save interaction to database
@@ -79,48 +79,48 @@ public class AnalyzerController {
 
     private String buildAnalyzerPrompt(String analysisType, String text, String context, MultipartFile image) {
         StringBuilder prompt = new StringBuilder();
-        prompt.append("Eres un analista experto en gestión de residuos biomédicos en Colombia, con conocimiento en normativa (Decreto 351/2014, Resolución 1164/2002). ");
-        prompt.append("Tipo de análisis solicitado: ").append(analysisType).append(".\n\n");
+        prompt.append("You are an expert analyst in biomedical waste management in Colombia, with knowledge of regulations (Decree 351/2014, Resolution 1164/2002). ");
+        prompt.append("Requested analysis type: ").append(analysisType).append(".\n\n");
 
         if (context != null && !context.isBlank()) {
-            prompt.append("Contexto adicional: ").append(context).append("\n\n");
+            prompt.append("Additional context: ").append(context).append("\n\n");
         }
 
         if (text != null && !text.isBlank()) {
-            prompt.append("Texto a analizar:\n").append(text).append("\n\n");
+            prompt.append("Text to analyze:\n").append(text).append("\n\n");
         }
 
         if (image != null && !image.isEmpty()) {
-            prompt.append("Se adjuntó una imagen para análisis visual. Descríbela en detalle y relacónala con el contexto de residuos biomédicos.\n\n");
+            prompt.append("An image was attached for visual analysis. Describe it in detail and relate it to the biomedical waste context.\n\n");
         }
 
-        prompt.append("Proporciona un análisis profesional y detallado en español que incluya:\n");
-        prompt.append("1. RESUMEN EJECUTIVO: Descripción clara de la situación analizada.\n");
-        prompt.append("2. HALLAZGOS PRINCIPALES: Lista detallada de lo encontrado.\n");
-        prompt.append("3. EVALUACIÓN DE RIESGO: Nivel de riesgo (bajo/medio/alto/crítico) con justificación.\n");
-        prompt.append("4. CUMPLIMIENTO NORMATIVO: Relación con Decreto 351/2014 y Resolución 1164/2002 si aplica.\n");
-        prompt.append("5. RECOMENDACIONES: Lista numerada de acciones concretas a tomar.\n");
-        prompt.append("6. PRIORIDAD: Indicar urgencia de atención.\n");
+        prompt.append("Provide a professional and detailed analysis in Spanish that includes:\n");
+        prompt.append("1. EXECUTIVE SUMMARY: Clear description of the analyzed situation.\n");
+        prompt.append("2. KEY FINDINGS: Detailed list of findings.\n");
+        prompt.append("3. RISK ASSESSMENT: Risk level (low/medium/high/critical) with justification.\n");
+        prompt.append("4. REGULATORY COMPLIANCE: Relation to Decree 351/2014 and Resolution 1164/2002 if applicable.\n");
+        prompt.append("5. RECOMMENDATIONS: Numbered list of concrete actions to take.\n");
+        prompt.append("6. PRIORITY: Indicate urgency of attention.\n");
 
         return prompt.toString();
     }
 
     private String buildTitle(String analysisType) {
         return switch (analysisType.toLowerCase()) {
-            case "route" -> "Análisis de Ruta";
-            case "traceability" -> "Análisis de Trazabilidad";
-            case "waste" -> "Análisis de Residuos";
-            case "report" -> "Análisis de Reporte";
-            case "municipality" -> "Análisis de Municipio";
-            case "fleet" -> "Análisis de Flota";
-            default -> "Análisis General";
+            case "route" -> "Route Analysis";
+            case "traceability" -> "Traceability Analysis";
+            case "waste" -> "Waste Analysis";
+            case "report" -> "Report Analysis";
+            case "municipality" -> "Municipality Analysis";
+            case "fleet" -> "Fleet Analysis";
+            default -> "General Analysis";
         };
     }
 
     private List<String> extractRecommendations(String message) {
         List<String> recommendations = new ArrayList<>();
         if (message == null || message.isBlank()) {
-            recommendations.add("No se pudieron generar recomendaciones.");
+            recommendations.add("Could not generate recommendations.");
             return recommendations;
         }
 
@@ -138,8 +138,8 @@ public class AnalyzerController {
         }
 
         if (recommendations.isEmpty()) {
-            recommendations.add("Revisar los datos proporcionados para un análisis más detallado.");
-            recommendations.add("Consultar con el equipo operativo para validar hallazgos.");
+            recommendations.add("Review the provided data for a more detailed analysis.");
+            recommendations.add("Consult with the operations team to validate findings.");
         }
 
         return recommendations;

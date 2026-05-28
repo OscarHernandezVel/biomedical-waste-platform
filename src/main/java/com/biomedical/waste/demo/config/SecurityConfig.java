@@ -89,11 +89,11 @@ public class SecurityConfig {
         String secret = supabaseJwtSecret == null ? "" : supabaseJwtSecret.trim();
 
         if (secret.isBlank() && ref.isBlank()) {
-            // Retorna un decodificador dummy para evitar que la aplicación crashee al iniciar
-            // si no se han configurado las variables de entorno de Supabase.
+            // Returns a dummy decoder to prevent the application from crashing on startup
+            // if Supabase environment variables are not configured.
             return token -> {
                 throw new org.springframework.security.oauth2.jwt.JwtValidationException(
-                    "Supabase no configurado en el backend",
+                    "Supabase not configured in the backend",
                     java.util.List.of(new org.springframework.security.oauth2.core.OAuth2Error("config_missing"))
                 );
             };

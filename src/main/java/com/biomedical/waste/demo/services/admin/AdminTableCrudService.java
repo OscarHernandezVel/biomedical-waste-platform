@@ -53,7 +53,7 @@ public abstract class AdminTableCrudService {
         try {
             return jdbc.queryForMap(sql, Map.of("id", id));
         } catch (EmptyResultDataAccessException ex) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Registro no encontrado");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Record not found");
         }
     }
 
@@ -63,7 +63,7 @@ public abstract class AdminTableCrudService {
 
         Map<String, Object> values = filterColumns(meta, payload);
         if (values.isEmpty()) {
-            throw new IllegalArgumentException("No hay campos válidos para insertar");
+            throw new IllegalArgumentException("No valid fields to insert");
         }
 
         List<String> cols = new ArrayList<>(values.keySet());
@@ -94,7 +94,7 @@ public abstract class AdminTableCrudService {
         Map<String, Object> values = filterColumns(meta, payload);
         values.remove(meta.primaryKeyColumn());
         if (values.isEmpty()) {
-            throw new IllegalArgumentException("No hay campos válidos para actualizar");
+            throw new IllegalArgumentException("No valid fields to update");
         }
 
         List<String> sets = values.keySet().stream().map(c -> c + " = :" + c).toList();
@@ -104,7 +104,7 @@ public abstract class AdminTableCrudService {
         params.addValue("id", id);
         int updated = jdbc.update(sql, params);
         if (updated == 0) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Registro no encontrado");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Record not found");
         }
         return Map.of("updated", true);
     }
@@ -117,20 +117,20 @@ public abstract class AdminTableCrudService {
         String sql = "delete from " + meta.name() + " where " + meta.primaryKeyColumn() + " = :id";
         int deleted = jdbc.update(sql, Map.of("id", id));
         if (deleted == 0) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Registro no encontrado");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Record not found");
         }
         return Map.of("deleted", true);
     }
 
     private void ensureWritable(TableMetadata meta) {
         if (meta.isView()) {
-            throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "La vista es de solo lectura");
+            throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "View is read-only");
         }
     }
 
     private void ensureSinglePrimaryKey(TableMetadata meta) {
         if (!meta.hasSinglePrimaryKey()) {
-            throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "La tabla no tiene llave primaria única");
+            throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Table does not have a single primary key");
         }
     }
 
@@ -161,7 +161,7 @@ public abstract class AdminTableCrudService {
                 DatabaseMetaData dbMeta = conn.getMetaData();
                 String resolvedName = resolveTableName(dbMeta, tableSelector);
                 if (resolvedName == null) {
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tabla/Vista no encontrada");
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Table/View not found");
                 }
                 ensureSafeIdentifier(resolvedName);
                 TableInfo info = readTableInfo(dbMeta, conn, resolvedName);
@@ -174,7 +174,7 @@ public abstract class AdminTableCrudService {
                 }
                 return new TableMetadata(resolvedName, info.type, info.primaryKeyColumn, Set.copyOf(info.columns), Set.copyOf(info.autoIncrementColumns));
             } catch (SQLException ex) {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error consultando metadata de la BD");
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error querying database metadata");
             }
         });
     }
@@ -200,7 +200,7 @@ public abstract class AdminTableCrudService {
             return null;
         }
         if (matches.size() > 1) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "El nombre coincide con múltiples tablas/vistas");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Name matches multiple tables/views");
         }
         return matches.getFirst().name;
     }
@@ -286,7 +286,7 @@ public abstract class AdminTableCrudService {
             return;
         }
         if (!SAFE_IDENTIFIER.matcher(identifier).matches()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Identificador inválido");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid identifier");
         }
     }
 

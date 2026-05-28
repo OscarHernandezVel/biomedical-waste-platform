@@ -26,16 +26,16 @@ public class AlertService {
         }
         AlertLevel level = determineLevel(waste);
         String typeLabel = switch (waste.getType()) {
-            case INFECTIOUS -> "Infeccioso";
-            case SHARPS -> "Cortopunzante";
-            case CHEMICAL -> "Químico";
-            case PHARMACEUTICAL -> "Farmacéutico";
-            case ANATOMICAL -> "Anatómico";
+            case INFECTIOUS -> "Infectious";
+            case SHARPS -> "Sharps";
+            case CHEMICAL -> "Chemical";
+            case PHARMACEUTICAL -> "Pharmaceutical";
+            case ANATOMICAL -> "Anatomical";
         };
         Alert alert = Alert.builder()
-            .message("Riesgo detectado: Residuo " + typeLabel
-                + " (" + waste.getWeightKg() + " kg) de " + waste.getOriginEntity()
-                + " — Nivel de riesgo: " + waste.getType().getRiskLevel())
+            .message("Risk detected: " + typeLabel + " waste"
+                + " (" + waste.getWeightKg() + " kg) from " + waste.getOriginEntity()
+                + " — Risk level: " + waste.getType().getRiskLevel())
             .level(level)
             .wasteId(waste.getId())
             .resolved(false)
@@ -73,7 +73,7 @@ public class AlertService {
             throw new IllegalArgumentException("Alert id cannot be empty");
         }
         Alert alert = alertRepository.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Alerta no encontrada"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Alert not found"));
         alert.setResolved(true);
         return alertRepository.save(alert);
     }
@@ -83,7 +83,7 @@ public class AlertService {
             throw new IllegalArgumentException("Alert id cannot be empty");
         }
         if (!alertRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Alerta no encontrada");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Alert not found");
         }
         alertRepository.deleteById(id);
     }
