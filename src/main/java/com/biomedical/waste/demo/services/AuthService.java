@@ -33,6 +33,9 @@ public class AuthService {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("El correo es obligatorio.");
         }
+        if (!isValidEmail(email)) {
+            throw new IllegalArgumentException("Ingresa un correo válido con dominio real (ej: usuario@gmail.com).");
+        }
         validatePassword(password);
         if (userRepository.existsByEmail(email.trim().toLowerCase())) {
             throw new IllegalArgumentException("Ese correo ya está registrado.");
@@ -96,6 +99,14 @@ public class AuthService {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /** Validates email has a real domain with proper format */
+    private boolean isValidEmail(String email) {
+        if (email == null) return false;
+        String trimmed = email.trim().toLowerCase();
+        // Must match: user@domain.ext where ext is at least 2 chars
+        return trimmed.matches("^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,}$");
     }
 
     /**
