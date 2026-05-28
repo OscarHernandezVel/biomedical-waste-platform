@@ -105,8 +105,8 @@ public class AuthService {
     private boolean isValidEmail(String email) {
         if (email == null) return false;
         String trimmed = email.trim().toLowerCase();
-        // Must match: user@domain.ext where ext is at least 2 chars
-        return trimmed.matches("^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,}$");
+        // Must match: user@domain.tld where tld is a known extension
+        return trimmed.matches("^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.(com|net|org|edu|gov|co|io|app|dev|info|biz|us|uk|es|mx|ar|cl|pe|ec|br|ve|bo|py|uy|cr|pa|gt|hn|sv|ni|do|cu|pr|com\\.co|edu\\.co|gov\\.co|org\\.co|com\\.mx|com\\.ar|com\\.br|com\\.pe|com\\.ec)$");
     }
 
     /**
